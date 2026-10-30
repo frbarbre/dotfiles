@@ -1,0 +1,9 @@
+[user]
+	name = Frederik Barbré
+	email = fr.barbre@gmail.com
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
