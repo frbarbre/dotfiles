@@ -19,10 +19,6 @@ install_zip() { # name url
   cp -R "$TMP/$1/$1.app" /Applications/
 }
 
-# Orca: personal fork (it updates itself after install)
-[ -d /Applications/Orca.app ] || \
-  install_dmg Orca "https://github.com/frbarbre/orca/releases/latest/download/orca-macos-arm64.dmg"
-
 # Scrawl: newest build from its update feed
 if [ ! -d /Applications/Scrawl.app ]; then
   url="$(curl -fsSL https://scrawl.kitlangton.com/appcast.xml | grep -oE 'url="[^"]+arm64\.zip"' | head -1 | cut -d'"' -f2)"

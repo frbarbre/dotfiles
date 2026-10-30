@@ -33,6 +33,7 @@ fi
 
 # Homebrew only loads formulae from third-party taps you trust
 brew tap hashicorp/tap && brew trust hashicorp/tap
+brew tap frbarbre/orca https://github.com/frbarbre/orca && brew trust frbarbre/orca
 
 # Keep going if one app fails (e.g. App Store not signed in yet); re-run to retry
 brew bundle --file="$DOT/Brewfile" || echo "!! Some Brewfile entries failed, see above"
