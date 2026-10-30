@@ -29,5 +29,5 @@ if [ ! -d /Applications/Scrawl.app ]; then
   install_zip Scrawl "$url"
 fi
 
-# NotchNook: no direct download link, so open the site
+# NotchNook: no stable direct download (and lo.cafe DNS is flaky), so open the site
 [ -d /Applications/NotchNook.app ] || { echo "NotchNook: download it from https://lo.cafe/notchnook"; open https://lo.cafe/notchnook; }

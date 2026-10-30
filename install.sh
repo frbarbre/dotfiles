@@ -44,10 +44,16 @@ mise install --yes
 
 # Tailscale (runs as a system daemon)
 sudo brew services start tailscale
+
+# gh extensions need a GitHub login, so install them once signed in
+if gh auth status >/dev/null 2>&1; then
+  gh extension install github/gh-stack || true
+fi
 echo
 echo "Done. Remaining manual steps:"
 echo "  1. sudo tailscale up --ssh"
-echo "  2. Sign in to Bitwarden and enable its SSH agent"
-echo "  3. Sign in to your apps (Dia, Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
-echo "  4. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Rectangle, Hyperkey)"
-echo "  5. Raycast: import your .rayconfig export (Settings > Advanced > Import)"
+echo "  2. gh auth login && gh extension install github/gh-stack"
+echo "  3. Sign in to Bitwarden and enable its SSH agent"
+echo "  4. Sign in to your apps (Dia, Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
+echo "  5. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Rectangle, Hyperkey)"
+echo "  6. Raycast: import your .rayconfig export (Settings > Advanced > Import)"

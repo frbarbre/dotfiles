@@ -12,7 +12,6 @@ alias p="pnpm"
 alias c="claude"
 alias mr="mise run"
 alias tsgo="pnpm tsgo --build"
-alias gs="git-spice"
 
 # Merge the branch's remembered base (default main) into the current branch.
 # `gmm <base>` sets and remembers the base.
