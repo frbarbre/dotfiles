@@ -5,15 +5,42 @@
 set -euo pipefail
 ITEM="Raycast Settings"
 
-bw login --check >/dev/null 2>&1 || bw login
-export BW_SESSION="${BW_SESSION:-$(bw unlock --raw)}"
+if [ -z "${BW_SESSION:-}" ]; then
+  if bw login --check >/dev/null 2>&1; then
+    BW_SESSION="$(bw unlock --raw)"
+  else
+    BW_SESSION="$(bw login --raw)"
+  fi
+  export BW_SESSION
+fi
 bw sync >/dev/null
 
-id="$(bw get item "$ITEM" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')"
-file="$(bw get item "$ITEM" | python3 -c 'import json,sys; print(json.load(sys.stdin)["attachments"][0]["fileName"])')"
-out="$(mktemp -d)/$file"
+# Find the item by exact name and pull out what we need
+read -r id file pw_ok < <(bw list items --search "$ITEM" | ITEM="$ITEM" python3 -c '
+import json, os, sys
+items = json.load(sys.stdin)
+want = os.environ["ITEM"]
+match = [i for i in items if i["name"].strip() == want]
+if not match:
+    names = ", ".join(repr(i["name"]) for i in items) or "none"
+    sys.exit(f"No item named {want!r} (similar: {names})")
+i = match[0]
+att = i.get("attachments") or []
+if not att:
+    sys.exit("The item has no attachment (attachments need Bitwarden Premium)")
+pw = bool((i.get("login") or {}).get("password"))
+print(i["id"], att[0]["fileName"].replace(" ", "%20"), int(pw))
+')
+file="${file//%20/ }"
 
+out="$(mktemp -d)/$file"
 bw get attachment "$file" --itemid "$id" --output "$out" >/dev/null
-bw get password "$ITEM" | pbcopy
-echo "Export password copied to clipboard; paste it when Raycast asks."
+
+if [ "$pw_ok" = 1 ]; then
+  bw get password "$id" | pbcopy
+  echo "Export password copied to clipboard; paste it when Raycast asks."
+else
+  echo "No password on the item; type the export password when Raycast asks."
+fi
 open -a Raycast "$out"
+bw lock >/dev/null
