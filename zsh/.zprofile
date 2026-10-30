@@ -2,3 +2,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Use Bitwarden's SSH agent (enable it in Bitwarden > Settings > SSH agent)
 export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+
+# OrbStack: command-line tools and integration
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :

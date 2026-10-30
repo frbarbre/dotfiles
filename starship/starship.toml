@@ -1,0 +1,18 @@
+format = "$directory$git_branch$character"
+
+add_newline = false
+
+[directory]
+truncation_length = 0
+truncate_to_repo = false
+style = "blue bold"
+format = "[$path]($style)\n"
+
+[git_branch]
+format = "[$symbol ]($style)[$branch]($style) "
+symbol = ""
+style = "purple bold"
+
+[character]
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"

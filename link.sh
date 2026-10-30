@@ -15,7 +15,11 @@ link() {
 
 link zsh/.zprofile          "$HOME/.zprofile"
 link zsh/.zshrc             "$HOME/.zshrc"
+link git/.gitconfig         "$HOME/.gitconfig"
+link git/ignore             "$HOME/.config/git/ignore"
+link starship/starship.toml "$HOME/.config/starship.toml"
+link ghostty/config         "$HOME/.config/ghostty/config"
+link mise/config.toml       "$HOME/.config/mise/config.toml"
 link warp/settings.toml     "$HOME/.warp/settings.toml"
 link openlogi/config.toml   "$HOME/.config/openlogi/config.toml"
 link claude/settings.json   "$HOME/.claude/settings.json"
-link git/.gitconfig          "$HOME/.gitconfig"

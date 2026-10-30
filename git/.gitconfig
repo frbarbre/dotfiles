@@ -7,3 +7,9 @@
 	rebase = true
 [push]
 	autoSetupRemote = true
+	default = current
+[spice "submit"]
+	restack = true
+	draft = true
+[spice "shorthand"]
+	ss = !git-spice stack restack && git-spice stack submit --fill

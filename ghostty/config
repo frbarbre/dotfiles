@@ -1,0 +1,7 @@
+font-size = 14
+font-feature = -liga
+macos-titlebar-style = tabs
+keybind = ctrl+d=unbind
+keybind = ctrl+d=ignore
+keybind = super+d=unbind
+keybind = super+d=ignore
