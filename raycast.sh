@@ -3,17 +3,11 @@
 # Expects an item named "Raycast Settings" with the .rayconfig export attached
 # and the export password in its password field.
 set -euo pipefail
+DOT="$(cd "$(dirname "$0")" && pwd)"
+. "$DOT/lib/bw.sh"
 ITEM="Raycast Settings"
 
-if [ -z "${BW_SESSION:-}" ]; then
-  if bw login --check >/dev/null 2>&1; then
-    BW_SESSION="$(bw unlock --raw)"
-  else
-    BW_SESSION="$(bw login --raw)"
-  fi
-  export BW_SESSION
-fi
-bw sync >/dev/null
+bw_unlock
 
 # Find the item by exact name and pull out what we need
 read -r id file pw_ok < <(bw list items --search "$ITEM" | ITEM="$ITEM" python3 -c '

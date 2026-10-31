@@ -59,3 +59,4 @@ echo "  4. Dia: sign in and turn on profile sync (brings back extensions, incl. 
 echo "  5. Sign in to your other apps (Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
 echo "  6. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey)"
 echo "  7. Raycast: ~/.dotfiles/raycast.sh (imports settings from Bitwarden)"
+echo "  8. Orca: ~/.dotfiles/orca-settings.sh restore (imports settings from Bitwarden)"
