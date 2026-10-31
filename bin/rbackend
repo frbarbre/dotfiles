@@ -5,17 +5,22 @@ REMOTE="${RBACKEND_HOST:-artemis}"
 UP_CMD="${RBACKEND_UP_CMD:-mise run backend-up}"
 DOWN_CMD="${RBACKEND_DOWN_CMD:-mise run backend-down}"
 STATE="$HOME/.local/state/rbackend"
+# Folders on the remote that rbackend created, so it never syncs into or deletes anything else.
+OWNED=".local/state/rbackend/owned"
 
 usage() {
   cat >&2 <<EOF
 usage: rbackend up|down|status|tunnel
+       rbackend archive [command...]
 
 Run this worktree's Docker Compose backend on $REMOTE while you work locally.
-  up      sync the worktree to $REMOTE, run '$UP_CMD' against $REMOTE's Docker,
-          then forward every published port to localhost
-  down    run '$DOWN_CMD', close the tunnels and stop syncing
-  status  show the sync, the tunnels and the running containers
-  tunnel  reopen the tunnels, e.g. after sleep
+  up       sync the worktree to $REMOTE, run '$UP_CMD' against $REMOTE's Docker,
+           then forward every published port to localhost
+  down     run '$DOWN_CMD', close the tunnels and stop syncing
+  status   show the sync, the tunnels and the running containers
+  tunnel   reopen the tunnels, e.g. after sleep
+  archive  close the tunnels, stop syncing, run the given command against $REMOTE's
+           Docker, then delete this worktree's copy on $REMOTE
 
 Override with RBACKEND_HOST, RBACKEND_UP_CMD and RBACKEND_DOWN_CMD.
 EOF
@@ -56,7 +61,11 @@ sync_start() {
   if mutagen sync list "$name" >/dev/null 2>&1; then
     mutagen sync resume "$name" >/dev/null
   else
-    ssh "$REMOTE" mkdir -p "$root"
+    if [ "$(ssh "$REMOTE" "[ -e '$root' ] && ! grep -qxF '$root' $OWNED 2>/dev/null && echo foreign")" = foreign ]; then
+      echo "rbackend: $root already exists on $REMOTE and wasn't created by rbackend; refusing to sync into it" >&2
+      exit 1
+    fi
+    ssh "$REMOTE" "mkdir -p '$root' \$(dirname $OWNED) && { grep -qxF '$root' $OWNED 2>/dev/null || echo '$root' >> $OWNED; }"
     # two-way-resolved: both sides propagate, and the local copy wins any conflict.
     mutagen sync create --name "$name" \
       --sync-mode two-way-resolved \
@@ -72,6 +81,16 @@ sync_start() {
 
 sync_stop() {
   mutagen sync terminate "$name" >/dev/null 2>&1 || true
+}
+
+remote_purge() {
+  local result
+  result="$(ssh "$REMOTE" "grep -qxF '$root' $OWNED 2>/dev/null && rm -rf '$root' && grep -vxF '$root' $OWNED > $OWNED.tmp; mv -f $OWNED.tmp $OWNED 2>/dev/null; [ -e '$root' ] || echo gone")"
+  if [ "$result" = gone ]; then
+    echo "deleted $root on $REMOTE"
+  else
+    echo "left $root on $REMOTE alone (not created by rbackend)"
+  fi
 }
 
 published_ports() {
@@ -135,6 +154,15 @@ case "${1:-}" in
     ;;
   tunnel)
     tunnel_start
+    ;;
+  archive)
+    shift
+    tunnel_stop
+    sync_stop
+    if [ $# -gt 0 ]; then
+      (cd "$root" && DOCKER_HOST="ssh://$REMOTE" "$@")
+    fi
+    remote_purge
     ;;
   *)
     usage
