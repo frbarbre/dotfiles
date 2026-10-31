@@ -23,3 +23,12 @@ link mise/config.toml       "$HOME/.config/mise/config.toml"
 link warp/settings.toml     "$HOME/.warp/settings.toml"
 link openlogi/config.toml   "$HOME/.config/openlogi/config.toml"
 link claude/settings.json   "$HOME/.claude/settings.json"
+link claude/CLAUDE.md       "$HOME/.claude/CLAUDE.md"
+link claude/keybindings.json "$HOME/.claude/keybindings.json"
+link claude/rules           "$HOME/.claude/rules"
+link linear/orca-open-issue.sh "$HOME/.linear/orca-open-issue.sh"
+link linear/coding-tools.json  "$HOME/.linear/coding-tools.json"
+# Per skill, since Orca and claude.ai sync also write into ~/.claude/skills
+for skill in "$DOT"/claude/skills/*/; do
+  link "claude/skills/$(basename "$skill")" "$HOME/.claude/skills/$(basename "$skill")"
+done

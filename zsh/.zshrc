@@ -27,7 +27,7 @@ gmm() {
   git fetch && git merge "origin/$base"
 }
 
-# Build + preview the flowbase frontend. The moon build task is cache-aware, so it
+# Build + preview the frontend. The moon build task is cache-aware, so it
 # only rebuilds when sources changed; preview runs under fnox for PREVIEW_PORT etc.
 fb-preview() {
   mise run frontend-build && mise exec -- fnox exec -- pnpm --filter frontend preview --strictPort false

@@ -43,6 +43,13 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 mise install --yes
 "$DOT/macos.sh"
 
+for m in warpdotdev/claude-code-warp DietrichGebert/ponytail bradautomates/claude-video; do
+  claude plugin marketplace add "$m" || true
+done
+for p in warp@claude-code-warp watch@claude-video mattpocock-skills@claude-plugins-official; do
+  claude plugin install "$p" || true
+done
+
 # Tailscale (runs as a system daemon)
 sudo brew services start tailscale
 
@@ -60,3 +67,4 @@ echo "  5. Sign in to your other apps (Slack, Linear, Beeper, Claude, ChatGPT, F
 echo "  6. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey)"
 echo "  7. Raycast: ~/.dotfiles/raycast.sh (imports settings from Bitwarden)"
 echo "  8. Orca: ~/.dotfiles/orca-settings.sh restore (imports settings from Bitwarden)"
+echo "  9. Linear: put the work repo's checkout path in ~/.linear/default-repo"
