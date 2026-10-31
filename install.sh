@@ -34,6 +34,7 @@ fi
 # Homebrew only loads formulae from third-party taps you trust
 brew tap hashicorp/tap && brew trust hashicorp/tap
 brew tap frbarbre/orca https://github.com/frbarbre/orca && brew trust frbarbre/orca
+brew tap mutagen-io/mutagen && brew trust mutagen-io/mutagen
 
 # Keep going if one app fails (e.g. App Store not signed in yet); re-run to retry
 brew bundle --file="$DOT/Brewfile" || echo "!! Some Brewfile entries failed, see above"
@@ -42,6 +43,8 @@ brew bundle --file="$DOT/Brewfile" || echo "!! Some Brewfile entries failed, see
 eval "$(/opt/homebrew/bin/brew shellenv)"
 mise install --yes
 "$DOT/macos.sh"
+# rbackend's file syncs resume after a reboot only if the daemon starts at login
+mutagen daemon register || true
 
 for m in warpdotdev/claude-code-warp DietrichGebert/ponytail bradautomates/claude-video; do
   claude plugin marketplace add "$m" || true

@@ -18,6 +18,8 @@ brew "zoxide"
 tap "hashicorp/tap"
 tap "frbarbre/orca", "https://github.com/frbarbre/orca"
 brew "hashicorp/tap/terraform"
+tap "mutagen-io/mutagen"
+brew "mutagen-io/mutagen/mutagen"
 
 # Apps
 cask "beeper"

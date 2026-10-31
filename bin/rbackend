@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REMOTE="${RBACKEND_HOST:-artemis}"
+UP_CMD="${RBACKEND_UP_CMD:-mise run backend-up}"
+DOWN_CMD="${RBACKEND_DOWN_CMD:-mise run backend-down}"
+STATE="$HOME/.local/state/rbackend"
+
+usage() {
+  cat >&2 <<EOF
+usage: rbackend up|down|status|tunnel
+
+Run this worktree's Docker Compose backend on $REMOTE while you work locally.
+  up      sync the worktree to $REMOTE, run '$UP_CMD' against $REMOTE's Docker,
+          then forward every published port to localhost
+  down    run '$DOWN_CMD', close the tunnels and stop syncing
+  status  show the sync, the tunnels and the running containers
+  tunnel  reopen the tunnels, e.g. after sleep
+
+Override with RBACKEND_HOST, RBACKEND_UP_CMD and RBACKEND_DOWN_CMD.
+EOF
+  exit 1
+}
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "rbackend: not inside a git worktree" >&2; exit 1; }
+# Mutagen session names allow only letters, digits and hyphens.
+name="rb-$(basename "$root" | tr -c 'A-Za-z0-9' '-' | cut -c1-24 | sed 's/-*$//')-$(printf '%s' "$root" | shasum | cut -c1-8)"
+# A control socket lets down/tunnel stop exactly the ssh that up started.
+sock="$STATE/$name.sock"
+mkdir -p "$STATE"
+
+remote_docker() {
+  DOCKER_HOST="ssh://$REMOTE" docker "$@"
+}
+
+# Tailscale SSH reports every remote command as exit 0, which defeats Mutagen's own agent
+# install, so put the matching agent in place first and check by output, not exit status.
+agent_install() {
+  local version dest platform bundle
+  version="$(mutagen version)"
+  dest=".mutagen/agents/$version/mutagen-agent"
+  [ "$(ssh "$REMOTE" "test -x '$dest' && echo ok")" = ok ] && return
+  platform="$(ssh "$REMOTE" uname -sm | awk '{
+    os = tolower($1); arch = $2
+    if (arch == "x86_64") arch = "amd64"
+    if (arch == "aarch64") arch = "arm64"
+    print os "_" arch }')"
+  bundle="$(brew --prefix mutagen)/libexec/mutagen-agents.tar.gz"
+  echo "installing mutagen agent $version ($platform) on $REMOTE..."
+  tar -xzOf "$bundle" "$platform" \
+    | ssh "$REMOTE" "mkdir -p '$(dirname "$dest")' && cat > '$dest' && chmod +x '$dest'"
+}
+
+sync_start() {
+  agent_install
+  if mutagen sync list "$name" >/dev/null 2>&1; then
+    mutagen sync resume "$name" >/dev/null
+  else
+    ssh "$REMOTE" mkdir -p "$root"
+    # two-way-resolved: both sides propagate, and the local copy wins any conflict.
+    mutagen sync create --name "$name" \
+      --sync-mode two-way-resolved \
+      --ignore-vcs \
+      --ignore node_modules --ignore .venv --ignore __pycache__ \
+      --ignore .pytest_cache --ignore .mypy_cache --ignore .ruff_cache \
+      --ignore .moon/cache --ignore .DS_Store \
+      "$root" "$REMOTE:$root" >/dev/null
+  fi
+  echo "syncing $root to $REMOTE..."
+  mutagen sync flush "$name"
+}
+
+sync_stop() {
+  mutagen sync terminate "$name" >/dev/null 2>&1 || true
+}
+
+published_ports() {
+  remote_docker ps --format '{{.Label "com.docker.compose.project.working_dir"}}|{{.Ports}}' \
+    | ROOT="$root" python3 -c '
+import os, re, sys
+root = os.environ["ROOT"].rstrip("/") + "/"
+ports = set()
+for line in sys.stdin:
+    wd, _, spec = line.rstrip("\n").partition("|")
+    if (wd.rstrip("/") + "/").startswith(root):
+        ports.update(re.findall(r"(?:0\.0\.0\.0|\[::\]|127\.0\.0\.1):(\d+)->", spec))
+print(" ".join(sorted(ports, key=int)))'
+}
+
+tunnel_up() {
+  ssh -S "$sock" -O check "$REMOTE" >/dev/null 2>&1
+}
+
+tunnel_stop() {
+  ssh -S "$sock" -O exit "$REMOTE" >/dev/null 2>&1 || true
+  rm -f "$sock"
+}
+
+tunnel_start() {
+  tunnel_stop
+  local ports args=()
+  ports="$(published_ports)"
+  if [ -z "$ports" ]; then
+    echo "no published ports on $REMOTE for $root"
+    return
+  fi
+  for p in $ports; do
+    args+=(-L "$p:localhost:$p")
+  done
+  ssh -f -N -M -S "$sock" \
+    -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+    "${args[@]}" "$REMOTE"
+  echo "forwarding to localhost: $ports"
+}
+
+case "${1:-}" in
+  up)
+    sync_start
+    (cd "$root" && DOCKER_HOST="ssh://$REMOTE" $UP_CMD)
+    tunnel_start
+    ;;
+  down)
+    tunnel_stop
+    (cd "$root" && DOCKER_HOST="ssh://$REMOTE" $DOWN_CMD) || true
+    sync_stop
+    ;;
+  status)
+    mutagen sync list "$name" 2>/dev/null | grep -E 'Name|Status|Conflicts' || echo "sync: not running"
+    if tunnel_up; then
+      echo "tunnels: up"
+    else
+      echo "tunnels: down"
+    fi
+    echo "published on $REMOTE: $(published_ports)"
+    ;;
+  tunnel)
+    tunnel_start
+    ;;
+  *)
+    usage
+    ;;
+esac

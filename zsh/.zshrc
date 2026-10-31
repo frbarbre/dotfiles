@@ -1,6 +1,6 @@
 export LC_CTYPE=en_US.UTF-8
 export LAUNCH_EDITOR="orca-open"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$PATH"
 
 # Runtimes (node, python, ...) managed by mise; see ~/.config/mise/config.toml
 eval "$(mise activate zsh)"
