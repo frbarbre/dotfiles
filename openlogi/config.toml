@@ -74,6 +74,13 @@ pointer_scaling = false
 force_sensing = false
 disable_keys = false
 
+[devices."serial:2433zej3hgx8".bindings.GestureButton]
+Up = "AppExpose"
+Down = "ShowDesktop"
+Left = "PreviousDesktop"
+Right = "NextDesktop"
+Click = "MissionControl"
+
 [devices."serial:2433zej3hgx8".links."direct:046d:b034".capabilities]
 buttons = true
 pointer = true
