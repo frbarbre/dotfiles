@@ -9,8 +9,16 @@ bw_unlock() {
       BW_SESSION="$(bw login --raw)"
     fi
     export BW_SESSION
+    BW_OWNED=1
   fi
   bw sync >/dev/null
+}
+
+# Only the script that unlocked the vault locks it, so a caller's session survives.
+bw_done() {
+  if [ -n "${BW_OWNED:-}" ]; then
+    bw lock >/dev/null
+  fi
 }
 
 # Print the id of the item with exactly this name, or nothing.

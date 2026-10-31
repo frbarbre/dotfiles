@@ -39,4 +39,4 @@ case "${1:-}" in
     echo "usage: $0 backup|restore" >&2; exit 1
     ;;
 esac
-bw lock >/dev/null
+bw_done

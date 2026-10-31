@@ -53,18 +53,13 @@ done
 # Tailscale (runs as a system daemon)
 sudo brew services start tailscale
 
-# gh extensions need a GitHub login, so install them once signed in
-if gh auth status >/dev/null 2>&1; then
-  gh extension install github/gh-stack || true
-fi
+echo
+echo "Sign in to Bitwarden once to restore GitHub, Linear, Tailscale, Raycast and Orca."
+"$DOT/secrets.sh" restore || echo "!! Some restores failed; re-run ~/.dotfiles/secrets.sh restore"
+
 echo
 echo "Done. Remaining manual steps:"
-echo "  1. sudo tailscale up --ssh"
-echo "  2. gh auth login && gh extension install github/gh-stack"
-echo "  3. Sign in to Bitwarden and enable its SSH agent"
-echo "  4. Dia: sign in and turn on profile sync (brings back extensions, incl. Bitwarden)"
-echo "  5. Sign in to your other apps (Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
-echo "  6. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey)"
-echo "  7. Raycast: ~/.dotfiles/raycast.sh (imports settings from Bitwarden)"
-echo "  8. Orca: ~/.dotfiles/orca-settings.sh restore (imports settings from Bitwarden)"
-echo "  9. Linear: put the work repo's checkout path in ~/.linear/default-repo"
+echo "  1. Bitwarden app: sign in and enable its SSH agent"
+echo "  2. Dia: sign in and turn on profile sync (brings back extensions, incl. Bitwarden)"
+echo "  3. Sign in to your other apps (Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
+echo "  4. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey)"

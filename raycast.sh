@@ -37,4 +37,4 @@ else
   echo "No password on the item; type the export password when Raycast asks."
 fi
 open -a Raycast "$out"
-bw lock >/dev/null
+bw_done
