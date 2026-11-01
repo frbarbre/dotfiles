@@ -30,8 +30,8 @@ EOF
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "rbackend: not inside a git worktree" >&2; exit 1; }
 # Mutagen session names allow only letters, digits and hyphens.
 name="rb-$(basename "$root" | tr -c 'A-Za-z0-9' '-' | cut -c1-24 | sed 's/-*$//')-$(printf '%s' "$root" | shasum | cut -c1-8)"
-# A control socket lets down/tunnel stop exactly the ssh that up started.
-sock="$STATE/$name.sock"
+pidfile="$STATE/$name.pid"
+logfile="$STATE/$name.log"
 mkdir -p "$STATE"
 
 remote_docker() {
@@ -107,29 +107,54 @@ print(" ".join(sorted(ports, key=int)))'
 }
 
 tunnel_up() {
-  ssh -S "$sock" -O check "$REMOTE" >/dev/null 2>&1
+  [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null
 }
 
 tunnel_stop() {
-  ssh -S "$sock" -O exit "$REMOTE" >/dev/null 2>&1 || true
-  rm -f "$sock"
+  if tunnel_up; then
+    kill "$(cat "$pidfile")" 2>/dev/null || true
+  fi
+  rm -f "$pidfile"
+}
+
+# A single ssh dies whenever either Mac sleeps, so keep reopening it; re-reading the
+# ports each time keeps the forwards right after a backend restart.
+tunnel_loop() {
+  set +e
+  local child=""
+  trap '[ -n "$child" ] && kill "$child" 2>/dev/null; exit 0' TERM INT
+  while :; do
+    local ports args=()
+    ports="$(published_ports 2>/dev/null)"
+    if [ -z "$ports" ]; then
+      sleep 10
+      continue
+    fi
+    for p in $ports; do
+      args+=(-L "$p:localhost:$p")
+    done
+    echo "$(date '+%F %T') connecting: $ports"
+    ssh -N -o ExitOnForwardFailure=yes -o ConnectTimeout=10 \
+      -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+      "${args[@]}" "$REMOTE" &
+    child=$!
+    wait "$child"
+    echo "$(date '+%F %T') disconnected (exit $?), retrying"
+    child=""
+    sleep 3
+  done
 }
 
 tunnel_start() {
   tunnel_stop
-  local ports args=()
+  local ports
   ports="$(published_ports)"
   if [ -z "$ports" ]; then
     echo "no published ports on $REMOTE for $root"
     return
   fi
-  for p in $ports; do
-    args+=(-L "$p:localhost:$p")
-  done
-  ssh -f -N -M -S "$sock" \
-    -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
-    "${args[@]}" "$REMOTE"
-  echo "forwarding to localhost: $ports"
+  (cd "$root" && nohup "$0" _tunnel-loop >>"$logfile" 2>&1 & echo $! > "$pidfile")
+  echo "forwarding to localhost: $ports (reconnects automatically)"
 }
 
 case "${1:-}" in
@@ -145,15 +170,22 @@ case "${1:-}" in
     ;;
   status)
     mutagen sync list "$name" 2>/dev/null | grep -E 'Name|Status|Conflicts' || echo "sync: not running"
-    if tunnel_up; then
-      echo "tunnels: up"
+    ports="$(published_ports)"
+    first="${ports%% *}"
+    if ! tunnel_up; then
+      echo "tunnels: down (run rbackend tunnel)"
+    elif [ -n "$first" ] && nc -z -G 2 localhost "$first" 2>/dev/null; then
+      echo "tunnels: connected"
     else
-      echo "tunnels: down"
+      echo "tunnels: reconnecting (log: $logfile)"
     fi
-    echo "published on $REMOTE: $(published_ports)"
+    echo "published on $REMOTE: $ports"
     ;;
   tunnel)
     tunnel_start
+    ;;
+  _tunnel-loop)
+    tunnel_loop
     ;;
   archive)
     shift
