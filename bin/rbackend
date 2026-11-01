@@ -111,8 +111,11 @@ tunnel_up() {
 }
 
 tunnel_stop() {
+  local pid
   if tunnel_up; then
-    kill "$(cat "$pidfile")" 2>/dev/null || true
+    pid="$(cat "$pidfile")"
+    pkill -P "$pid" 2>/dev/null || true
+    kill "$pid" 2>/dev/null || true
   fi
   rm -f "$pidfile"
 }
@@ -122,6 +125,7 @@ tunnel_stop() {
 tunnel_loop() {
   set +e
   local child=""
+  echo $$ > "$pidfile"
   trap '[ -n "$child" ] && kill "$child" 2>/dev/null; exit 0' TERM INT
   while :; do
     local ports args=()
@@ -153,7 +157,9 @@ tunnel_start() {
     echo "no published ports on $REMOTE for $root"
     return
   fi
-  (cd "$root" && nohup "$0" _tunnel-loop >>"$logfile" 2>&1 & echo $! > "$pidfile")
+  cd "$root"
+  nohup "$0" _tunnel-loop </dev/null >>"$logfile" 2>&1 &
+  disown
   echo "forwarding to localhost: $ports (reconnects automatically)"
 }
 
