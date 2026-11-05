@@ -27,7 +27,8 @@ eval "$(mise activate zsh)"
 
 alias dot='cd ~/.dotfiles'
 alias brewup='brew update && brew bundle --file=~/.dotfiles/Brewfile && brew upgrade'
-alias cd="z"
+# Claude Code's shell snapshot keeps this alias but drops zoxide's chpwd hook, so z warns on every cd there
+[[ -z $CLAUDECODE ]] && alias cd="z"
 alias p="pnpm"
 alias c="claude"
 alias mr="mise run"
