@@ -172,8 +172,8 @@ sidetone = false
 [devices."serial:2535zar5vz28".bindings.GestureButton]
 Up = "AppExpose"
 Down = "ShowDesktop"
-Left = "PrevTab"
-Right = "NextTab"
+Left = "PreviousDesktop"
+Right = "NextDesktop"
 Click = "MissionControl"
 
 [devices."serial:2535zar5vz28".smartshift]
