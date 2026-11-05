@@ -2,12 +2,16 @@
 # Symlink config files from the repo into place. Safe to re-run.
 set -euo pipefail
 DOT="$(cd "$(dirname "$0")" && pwd)"
+# Outside the linked folders: a backup inside ~/.claude/skills gets loaded as a second skill.
+BACKUP="$HOME/dotfiles-backups/$(date +%Y%m%d-%H%M%S)"
 
 link() {
   local src="$DOT/$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
   if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-    mv "$dst" "$dst.backup.$(date +%s)"
+    mkdir -p "$BACKUP/$(dirname "${dst#$HOME/}")"
+    mv "$dst" "$BACKUP/${dst#$HOME/}"
+    echo "backed up $dst to $BACKUP"
   fi
   ln -sfn "$src" "$dst"
   echo "linked $dst"
