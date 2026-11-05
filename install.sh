@@ -44,6 +44,10 @@ brew bundle --file="$DOT/Brewfile" || echo "!! Some Brewfile entries failed, see
 eval "$(/opt/homebrew/bin/brew shellenv)"
 mise install --yes
 "$DOT/macos.sh"
+
+# Claude Code's native installer, not the Homebrew cask: it updates itself, the cask lags a week
+[ -x "$HOME/.local/bin/claude" ] || curl -fsSL https://claude.ai/install.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
 # rbackend's file syncs resume after a reboot only if the daemon starts at login
 mutagen daemon register || true
 

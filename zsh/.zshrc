@@ -1,6 +1,5 @@
 export LC_CTYPE=en_US.UTF-8
 export LAUNCH_EDITOR="orca-open"
-export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$PATH"
 
 # Older toolchains still installed on some Macs; guarded so a fresh Mac skips them.
 export NVM_DIR="$HOME/.nvm"
@@ -17,6 +16,9 @@ if [ -d "$HOME/.proto" ]; then
   export PROTO_HOME="$HOME/.proto"
   export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 fi
+
+# After the toolchains above: nvm's global npm bin would otherwise shadow the native claude in ~/.local/bin.
+export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$PATH"
 
 # Runtimes (node, python, ...) managed by mise; see ~/.config/mise/config.toml
 eval "$(mise activate zsh)"
