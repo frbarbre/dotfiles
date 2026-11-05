@@ -1,2 +1,6 @@
 [tools]
 node = "lts"
+
+[settings]
+# Projects like flowbase set locked = true; their lockfile can't contain this rolling global node.
+locked_scopes = ["project"]
