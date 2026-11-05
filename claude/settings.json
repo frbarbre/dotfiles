@@ -189,9 +189,16 @@
   "enabledPlugins": {
     "warp@claude-code-warp": true,
     "watch@claude-video": true,
-    "mattpocock-skills@claude-plugins-official": true
+    "mattpocock-skills@claude-plugins-official": true,
+    "replay-theater@claude-code-playground-mods": true
   },
   "extraKnownMarketplaces": {
+    "claude-code-playground-mods": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/frederikbarbre/Documents/github/claude-code-playground/claude-code/mods"
+      }
+    },
     "claude-code-warp": {
       "source": {
         "source": "github",

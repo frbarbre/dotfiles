@@ -35,6 +35,7 @@ fi
 brew tap hashicorp/tap && brew trust hashicorp/tap
 brew tap frbarbre/orca https://github.com/frbarbre/orca && brew trust frbarbre/orca
 brew tap mutagen-io/mutagen && brew trust mutagen-io/mutagen
+brew tap frbarbre/dockanchor https://github.com/frbarbre/dockanchor && brew trust frbarbre/dockanchor
 
 # Keep going if one app fails (e.g. App Store not signed in yet); re-run to retry
 brew bundle --file="$DOT/Brewfile" || echo "!! Some Brewfile entries failed, see above"
@@ -65,5 +66,5 @@ echo "Done. Remaining manual steps:"
 echo "  1. Bitwarden app: sign in and enable its SSH agent"
 echo "  2. Dia: sign in and turn on profile sync (brings back extensions, incl. Bitwarden)"
 echo "  3. Sign in to your other apps (Slack, Linear, Beeper, Claude, ChatGPT, Figma, Spotify, Raycast, ...)"
-echo "  4. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey)"
+echo "  4. Grant accessibility/input permissions (OpenLogi, Wispr Flow, Raycast, Hyperkey, DockAnchor)"
 echo "  5. Sharing settings (already open): turn on Screen Sharing for vnc://<this Mac> over Tailscale"

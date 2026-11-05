@@ -2,8 +2,26 @@ export LC_CTYPE=en_US.UTF-8
 export LAUNCH_EDITOR="orca-open"
 export PATH="$HOME/.dotfiles/bin:$HOME/.local/bin:$PATH"
 
+# Older toolchains still installed on some Macs; guarded so a fresh Mac skips them.
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+if [ -d "$HOME/.bun" ]; then
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
+  [ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
+fi
+[ -d "$HOME/.opencode/bin" ] && export PATH="$HOME/.opencode/bin:$PATH"
+[ -d /Library/Frameworks/Python.framework/Versions/3.14/bin ] && export PATH="/Library/Frameworks/Python.framework/Versions/3.14/bin:$PATH"
+if [ -d "$HOME/.proto" ]; then
+  export PROTO_HOME="$HOME/.proto"
+  export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+fi
+
 # Runtimes (node, python, ...) managed by mise; see ~/.config/mise/config.toml
 eval "$(mise activate zsh)"
+
+[ -S "$HOME/.orbstack/run/docker.sock" ] && export DOCKER_HOST="unix://$HOME/.orbstack/run/docker.sock"
 
 alias dot='cd ~/.dotfiles'
 alias brewup='brew update && brew bundle --file=~/.dotfiles/Brewfile && brew upgrade'
@@ -12,6 +30,8 @@ alias p="pnpm"
 alias c="claude"
 alias mr="mise run"
 alias tsgo="pnpm tsgo --build"
+alias open-artemis="open vnc://artemis"
+alias sync-models="python3 ~/.config/scripts/update_opencode_models.py"
 
 # Merge the branch's remembered base (default main) into the current branch.
 # `gmm <base>` sets and remembers the base.
@@ -42,6 +62,9 @@ killport() {
   echo $pids | xargs kill -9
   echo "killed $(echo $pids | tr '\n' ' ')on port $1"
 }
+
+# Lets Warp warpify subshells (ssh, docker exec) that source this file
+[[ "$-" == *i* ]] && printf '\eP$f{"hook": "SourcedRcFileForWarp", "value": { "shell": "zsh", "uname": "Darwin" }}\x9c'
 
 eval "$(starship init zsh)"
 

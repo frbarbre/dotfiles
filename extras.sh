@@ -24,6 +24,3 @@ if [ ! -d /Applications/Scrawl.app ]; then
   url="$(curl -fsSL https://scrawl.kitlangton.com/appcast.xml | grep -oE 'url="[^"]+arm64\.zip"' | head -1 | cut -d'"' -f2)"
   install_zip Scrawl "$url"
 fi
-
-# NotchNook: no direct download link, so open the download page
-[ -d /Applications/NotchNook.app ] || { echo "NotchNook: download it from https://getnotchnook.com/download"; open https://getnotchnook.com/download; }
